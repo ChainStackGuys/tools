@@ -2,24 +2,25 @@
 
 1. Clone the repo and cd into it `git clone https://github.com/ChainStackGuys/tools.git MyProject && cd MyProject`
 2. Install deps with yarn `yarn` or npm `npm install`
-3. Start hardhat `npx hardhat node --watch` // 使用 hardhat node, 也可以不用
-4. Deploy `npx hardhat deploy --network ganache` // 不使用 hardhat node, 直接部署到指定的网络
+3. rename hardhat.config.example.ts to hardhat.config.ts
+4. Start hardhat `npx hardhat node --watch` // 使用 hardhat node, 也可以不用
+5. Deploy `npx hardhat deploy --network ganache` // 不使用 hardhat node, 直接部署到指定的网络
 
 ```text
 It runs up a Hardhat node, compile contracts, generates typescript interfaces, creates React context and instantiates your contract instances and factories with frontend provider.
 ```
 
-4. Open up a new terminal
-5. Enter the frontend directory: `cd frontend`
-6. Install dependencies with yarn `yarn` or npm `npm install`
-7. Import seed phrase in Metamask. The default mnemonic currently used by hardhat is `test test test test test test test test test test test junk`
-8. Please note that you need to sign out from your current Metamask wallet to import a new one. **Instead of logging out**, you can use a new browser profile to do your Ethereum development:
-9. Click your profile icon in the top right corner of Chrome (right next to the hamburger menu icon)
-10. Click "Add"
-11. Give the profile a name and click "Add"
-12. In this new browser window, install Metamask and import the keyPhrase above
-13. Ensure Metamask RPC is set to `http://localhost:8545` and chainID `31337`.
-14. Start the React app: `npm start`
+6. Open up a new terminal
+7. Enter the frontend directory: `cd frontend`
+8. Install dependencies with yarn `yarn` or npm `npm install`
+9.  Import seed phrase in Metamask. The default mnemonic currently used by hardhat is `test test test test test test test test test test test junk`
+10. Please note that you need to sign out from your current Metamask wallet to import a new one. **Instead of logging out**, you can use a new browser profile to do your Ethereum development:
+11. Click your profile icon in the top right corner of Chrome (right next to the hamburger menu icon)
+12. Click "Add"
+13. Give the profile a name and click "Add"
+14. In this new browser window, install Metamask and import the keyPhrase above
+15. Ensure Metamask RPC is set to `http://localhost:8545` and chainID `31337`.
+16. Start the React app: `npm start`
 
 The frontend should open at http://localhost:3000/
 
