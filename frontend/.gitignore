@@ -37,5 +37,6 @@ screenshot
 .firebase
 .eslintcache
 
+.env
 build
 /src/hardhat
