@@ -1,0 +1,12 @@
+.idea
+.vscode
+*.DS_Store
+node_modules
+
+#hardhat files
+cache
+artifacts
+deployments
+frontend/src/hardhat
+
+hardhat.config.ts
