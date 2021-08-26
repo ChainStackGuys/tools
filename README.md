@@ -7,7 +7,9 @@
 5. Deploy `npx hardhat deploy --network ganache` // 不使用 hardhat node, 直接部署到指定的网络
 
 ```text
-It runs up a Hardhat node, compile contracts, generates typescript interfaces, creates React context and instantiates your contract instances and factories with frontend provider.
+It runs up a Hardhat node, compile contracts, generates typescript interfaces, 
+creates React context and instantiates your contract instances and factories 
+with frontend provider.
 ```
 
 6. Open up a new terminal
