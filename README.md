@@ -1,5 +1,9 @@
 # Get started
 
+[Hardhat官方教程](https://www.zhihu.com/tardis/sogou/art/353251375)
+
+[Hardhat官方案例](https://github.com/nomiclabs/hardhat-hackathon-boilerplate)
+
 1. Clone the repo and cd into it `git clone https://github.com/ChainStackGuys/tools.git MyProject && cd MyProject`
 2. Install deps with yarn `yarn` or npm `npm install`
 3. rename `hardhat.config.example.ts` to `hardhat.config.ts`

@@ -56,6 +56,22 @@ const Airdrop: React.FC<Props> = () => {
     return () => {};
   }, [balanceChecker]);
 
+  const getEth = useCallback(async () => {
+    if (!airdrop.instance) return;
+    const balance = await airdrop.instance.provider.getBalance(airdrop.instance.address);
+    const etherString = utils.formatEther(balance);
+    console.log('Contract Balance => ', etherString, balance.toString());
+    setEth(() => etherString);
+  }, [airdrop]);
+
+  useEffect(() => {
+    if (!airdrop.instance) return;
+    airdrop.instance.on('Receive', (from, value, ...rest) => {
+      console.log('onReceive', from, value, rest);
+      getEth().then(noop);
+    });
+  }, [airdrop, getEth]);
+
   const getBalances = async () => {
     if (!balanceChecker.instance) return;
     if (!currentAddress) {
@@ -79,14 +95,6 @@ const Airdrop: React.FC<Props> = () => {
     setTokenList(list);
   };
 
-  const getEth = useCallback(async () => {
-    if (!airdrop.instance) return;
-    const balance = await airdrop.instance.provider.getBalance(airdrop.instance.address);
-    const etherString = utils.formatEther(balance);
-    console.log('Contract Balance => ', etherString, balance.toString());
-    setEth(() => etherString);
-  }, [airdrop]);
-
   /**
    *
    * @param token 需要空投的合约地址
@@ -107,13 +115,10 @@ const Airdrop: React.FC<Props> = () => {
       console.error('TokenAirdrop instance not ready');
       return;
     }
-    // 已开源的合约获取abi
-    // curl https://api.etherscan.io/api?module=contract&action=getabi&address=0xae32a90ec96f56178ee84e698f583c975a7748e0&apikey=H2K72IKVK1YHWTH7TR6R74VT78SFGSJ9H9
-    // const apiKey = 'H2K72IKVK1YHWTH7TR6R74VT78SFGSJ9H9';
-    // const url = `https://api.etherscan.io/api?module=contract&action=getabi&address=${token}&apikey=${apiKey}`
+
     const { token, amount } = state;
+    // const tokenInstance = new ethers.Contract(token, abi, provider);
     const tokenInstance = customToken.instance.attach(token).connect(signer);
-    // const tokenInstance = new ethers.Contract(token, abi, airdrop.instance.provider);
     // 进行转账授权，即调用合约的 approve 方法为空投合约授权
     const approve = await tokenInstance.approve(
       airdrop.instance.address,
@@ -139,9 +144,14 @@ const Airdrop: React.FC<Props> = () => {
     // );
     // console.log('gas', gas);
     // return;
-    const tx = await airdrop.instance.airdrop(token, list, utils.parseEther(amount.toString()), {
-      value: utils.parseEther('0.1'),
-    });
+    const tx = await airdrop.instance.airdropWithAmount(
+      token,
+      list,
+      utils.parseEther(amount.toString()),
+      {
+        value: utils.parseEther('0.1'),
+      },
+    );
     console.log('airdrop tx', tx);
     await tx.wait();
     console.log('airdrop mined');
@@ -154,7 +164,7 @@ const Airdrop: React.FC<Props> = () => {
       console.error('TokenFactory instance not ready');
       return;
     }
-    const tx = await airdrop.instance.withdraw(utils.parseEther(eth));
+    const tx = await airdrop.instance.withdraw('0x0', utils.parseEther(eth));
     console.log('withdraw tx', tx);
     await tx.wait();
     console.log('withdraw mined');

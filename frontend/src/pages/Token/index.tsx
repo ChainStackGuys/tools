@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
   CurrentAddressContext,
   CustomTokenContext,
@@ -21,6 +21,26 @@ const Token: React.FC<Props> = () => {
   const [balance, setBalance] = useState('');
   const [recipientAddress, setRecipientAddress] = useState('');
   const [recipientBalance, setRecipientBalance] = useState('');
+
+  const checkUserBalance = useCallback(async (address: string) => {
+    if (!token.instance) return '';
+    if (!address) {
+      console.error('地址不得为空');
+      return '';
+    }
+    const balance = await token.instance.balanceOf(address);
+    return utils.formatEther(balance);
+  }, [token]);
+
+  useEffect(() => {
+    if (!token.instance) return;
+    token.instance.on('Transfer', async (from, to, value, ...rest) => {
+      // 触发多次 TODO
+      console.log('Transfer', from, to, value, rest);
+      setBalance(await checkUserBalance(from));
+      setRecipientBalance(await checkUserBalance(to));
+    });
+  }, [token, checkUserBalance]);
 
   useEffect(() => {
     const doAsync = async () => {
@@ -54,25 +74,8 @@ const Token: React.FC<Props> = () => {
     console.log('tx:', tx);
     await tx.wait();
     // setMessage(tx.toString()); // TODO:
-    setBalance(await checkUserBalance(currentAddress));
-    setRecipientBalance(await checkUserBalance(recipientAddress));
-  };
-
-  // const checkBalanceHandle = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-  //   e.preventDefault();
-  //   if (!token.instance) throw Error('Token instance not ready');
-  //   const balance = await token.instance.balanceOf(recipientAddress);
-  //   setRecipientBalance(utils.formatEther(balance));
-  // };
-
-  const checkUserBalance = async (address: string) => {
-    if (!token.instance) return '';
-    if (!address) {
-      console.error('地址不得为空');
-      return '';
-    }
-    const balance = await token.instance.balanceOf(address);
-    return utils.formatEther(balance);
+    // setBalance(await checkUserBalance(currentAddress));
+    // setRecipientBalance(await checkUserBalance(recipientAddress));
   };
 
   return (
@@ -82,7 +85,9 @@ const Token: React.FC<Props> = () => {
       <p>my balance: {balance}</p>
 
       <div className="s20"></div>
-      <p>send transaction (amount, recipient):</p>
+      <p>
+        send transaction ({amount}, {recipientAddress}):
+      </p>
       <div>
         <div>
           <input className="input" placeholder="100" onChange={amountEntered} />

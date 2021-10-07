@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
+import { utils } from 'ethers';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy } = hre.deployments;
@@ -11,7 +12,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   await deploy(contractName, {
     from: deployer,
     contract: contractName,
-    args: ['DogToken', 'DOG', '100000000'],
+    args: ['DogToken', 'DOG', 18, utils.parseEther('100000000')],
     log: true,
   });
   // console.log(contractName, '合约部署地址:', result.address);

@@ -1,63 +1,62 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.3;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-contract CustomToken is ERC20, Ownable {
-    address private _creator;
-
-    constructor(
-        string memory name,
-        string memory symbol,
-        uint256 _initialSupply
-    ) ERC20(name, symbol) {
-        uint256 initialSupply = _initialSupply * 10**uint256(decimals());
-        _creator = msg.sender;
-        _mint(tx.origin, initialSupply);
-    }
-
-    function creator() external view returns (address) {
-        return _creator;
-    }
-}
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "hardhat/console.sol";
+import "./CustomToken.sol";
 
 contract TokenFactory is Ownable {
-    ERC20[] contracts;
-
-    function getContracts() public view returns (ERC20[] memory) {
-        return contracts;
-    }
-
-    function destroy() external onlyOwner {
-        selfdestruct(payable(owner()));
-    }
-
+    event Receive(address from, uint256 value);
+    event Fallback(address from, uint256 value, bytes data);
+    event Withdraw(address token, uint256 amount);
     event TokenCreated(
         string name,
         string symbol,
+        uint8 decimals,
         uint256 initialSupply,
         address tokenAddress,
         address tokenCreator,
         address tokenOwner
     );
-    event Fallback(address from, bytes data);
-    event Receive(address from, uint256 value);
-    event Withdraw(address from, uint256 value);
+
+    receive() external payable {
+        emit Receive(msg.sender, msg.value);
+    }
+
+    fallback() external payable {
+        emit Fallback(msg.sender, msg.value, msg.data);
+    }
+
+    function destroy() external onlyOwner {
+        uint256 balance = address(this).balance;
+        payable(owner()).transfer(balance);
+        emit Withdraw(address(0), balance);
+        selfdestruct(payable(owner()));
+    }
 
     function createToken(
         string calldata name,
         string calldata symbol,
+        uint8 decimals,
         uint256 initialSupply
     ) external payable returns (CustomToken tokenAddress) {
-        // 大于等于 0.05 个主币
-        require(msg.value >= 5 * 10**uint256(16));
-        tokenAddress = new CustomToken(name, symbol, initialSupply);
+        // 手续费必须大于等于 0.05 个主币
+        require(msg.value >= 0.05 ether, "fee must >= 0.05 main coin");
+        tokenAddress = new CustomToken(name, symbol, decimals, initialSupply);
         tokenAddress.transferOwnership(_msgSender());
-        contracts.push(tokenAddress);
+        // tokenAddress.transferOwnership(tx.origin); // 明确是源交易发起者
+        console.log(
+            "\t createToken => %s %s %s",
+            address(tokenAddress),
+            owner(),
+            tokenAddress.owner()
+        );
         emit TokenCreated(
             name,
             symbol,
+            decimals,
             initialSupply,
             address(tokenAddress),
             _msgSender(),
@@ -65,24 +64,19 @@ contract TokenFactory is Ownable {
         );
     }
 
-    function withdraw(uint256 amount) external onlyOwner {
-        payable(owner()).transfer(amount);
-        emit Withdraw(owner(), amount);
-    }
-
-    // function isTokenTransferOK(address currentOwner, address newOwner)
-    //     external
-    //     pure
-    //     returns (bool ok)
-    // {
-    //     return keccak256(abi.encodePacked(currentOwner, newOwner))[0] == 0x7f;
-    // }
-
-    fallback() external payable {
-        emit Fallback(msg.sender, msg.data);
-    }
-
-    receive() external payable {
-        emit Receive(msg.sender, msg.value);
+    function withdraw(address token, uint256 amount) external onlyOwner {
+        uint256 balance;
+        if (token == address(0)) {
+            balance = address(this).balance;
+            require(balance >= amount, "withdraw amount exceeds balance");
+            payable(owner()).transfer(amount);
+            emit Withdraw(token, amount);
+            return;
+        }
+        ERC20 erc20 = ERC20(token);
+        balance = ERC20(token).balanceOf(address(this));
+        require(balance >= amount, "withdraw amount exceeds balance");
+        assert(erc20.transfer(owner(), amount) == true);
+        emit Withdraw(token, amount);
     }
 }

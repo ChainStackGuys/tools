@@ -8,7 +8,7 @@ import { TokenFactoryContext } from '@/hardhat/SymfoniContext';
 
 interface Props {}
 
-type CreateTokenData = { name: string; symbol: string; supply: string };
+type CreateTokenData = { name: string; symbol: string; decimals: string; supply: string };
 
 const Issue: React.FC<Props> = () => {
   const intl = useIntl();
@@ -30,12 +30,11 @@ const Issue: React.FC<Props> = () => {
 
   useEffect(() => {
     if (!factory.instance) return;
-    console.log('onReceive');
-    factory.instance.on('Receive', (from, value, event) => {
-      console.log('onReceive', from, value, event);
+    factory.instance.on('Receive', (from, value, ...rest) => {
+      console.log('onReceive', from, value, rest);
       getEth().then(noop);
     });
-  }, [getEth, factory]);
+  }, [factory, getEth]);
 
   useEffect(() => {
     const doAsync = async () => {
@@ -55,14 +54,20 @@ const Issue: React.FC<Props> = () => {
       return;
     }
     console.log('handleCreateToken tx start...');
-    const { name, symbol, supply } = values;
-    console.log('name, symbol, supply', name, symbol, supply);
-    // const gasLimit = await factory.instance.estimateGas.createToken(name, symbol, supply);
+    const { name, symbol, decimals, supply } = values;
+    console.log('name, symbol, decimals, supply', name, symbol, decimals, supply);
+    // const gasLimit = await factory.instance.estimateGas.createToken(name, symbol, decimals, utils.parseEther(supply));
     // console.log('gasLimit =>', gasLimit);
     // return;
-    const tx = await factory.instance.createToken(name, symbol, supply, {
-      value: utils.parseEther('0.05'),
-    });
+    const tx = await factory.instance.createToken(
+      name,
+      symbol,
+      decimals,
+      utils.parseEther(supply),
+      {
+        value: utils.parseEther('0.05'),
+      },
+    );
     console.log('handleCreateToken tx', tx);
     await tx.wait();
     console.log('handleCreateToken mined');
@@ -75,11 +80,11 @@ const Issue: React.FC<Props> = () => {
       console.error('TokenFactory instance not ready');
       return;
     }
-    const tx = await factory.instance.withdraw(utils.parseEther(eth));
+    const tx = await factory.instance.withdraw('0x0', utils.parseEther(eth));
     console.log('withdraw tx', tx);
-    await tx.wait();
-    console.log('withdraw mined');
-    await getEth();
+    const res = await tx.wait();
+    console.log('withdraw mined', res);
+    // await getEth();
   };
 
   return (
@@ -112,6 +117,13 @@ const Issue: React.FC<Props> = () => {
           ]}
         >
           <Input style={{ width: 300 }} />
+        </Form.Item>
+        <Form.Item
+          name="decimals"
+          label={intl.formatMessage({ id: 'pages.issue.decimals' })}
+          rules={[{ type: 'integer', min: 0, max: 18 }]}
+        >
+          <InputNumber style={{ width: 300 }} />
         </Form.Item>
         <Form.Item
           name="supply"

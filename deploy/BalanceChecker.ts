@@ -4,7 +4,9 @@ import { DeployFunction } from 'hardhat-deploy/types';
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
+  let wallet = hre.ethers.Wallet.fromMnemonic('test test test test test test test test test test test junk');
   const contractName = 'BalanceChecker';
+  console.log(contractName, '创建者密钥:', wallet.privateKey);
   // 检查是否是自己的地址
   console.log(contractName, '创建者地址:', deployer);
   // 以下只会在未部署过或合约代码有改变时执行部署

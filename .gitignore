@@ -9,4 +9,5 @@ artifacts
 deployments
 frontend/src/hardhat
 
+docs.md
 hardhat.config.ts

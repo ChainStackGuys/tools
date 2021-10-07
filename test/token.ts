@@ -6,13 +6,13 @@ import { BigNumber, Contract, ContractFactory, utils } from 'ethers';
 describe('CustomToken contract', async () => {
   const fifty = utils.parseEther('50');
   const hundred = utils.parseEther('100');
+  const decimals = 18;
   let Factory: ContractFactory;
   let instance: Contract;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
   let rest: SignerWithAddress[];
-  const provider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545/");
 
   // `beforeEach` 将在每一次测试时运行, 每一次测试时重新部署合约.
   beforeEach(async () => {
@@ -29,15 +29,32 @@ describe('CustomToken contract', async () => {
 
     // To deploy our contract, we just have to call Factory.deploy() and await for
     // it to be deployed(), which happens onces its transaction has been mined.
-    instance = await Factory.deploy('DogToken', 'DOG', '1000');
+    instance = await Factory.deploy(
+      'DogToken',
+      'DOG',
+      decimals,
+      utils.parseEther('1000')
+    );
     // wait until the transaction is mined
     await instance.deployed();
   });
 
   describe('Deployment', () => {
+    it('Should get the chainId', async () => {
+      const chainId = await owner.getChainId();
+      console.log('\t current chainId =', chainId);
+      expect(chainId).to.gt(0);
+    });
+
     // If the callback function is async, Mocha will `await` it.
     it('Should set the right owner', async () => {
       expect(await instance.owner()).to.equal(owner.address);
+    });
+
+    it('Should set the right decimals', async () => {
+      // const d = await instance.decimals();
+      // console.log('decimals', d, typeof d);
+      expect(await instance.decimals()).to.equal(decimals);
     });
   });
 
@@ -81,7 +98,7 @@ describe('CustomToken contract', async () => {
       );
     });
 
-    it('Should update balances after transfers', async function () {
+    it('Should update balances after transfer', async function () {
       const initialOwnerBalance: BigNumber = await instance.balanceOf(
         owner.address
       );
